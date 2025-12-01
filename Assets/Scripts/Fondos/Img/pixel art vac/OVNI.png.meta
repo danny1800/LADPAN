@@ -1,0 +1,523 @@
+fileFormatVersion: 2
+guid: c8981f3f130e1e44f94a8487c3dfc0a4
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 0
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 50
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 3
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: OVNI_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 276.75
+        width: 112.833336
+        height: 92.25
+      alignment: 9
+      pivot: {x: 0.5919755, y: 0.384194}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 57e833abd9f59314689f03df12f54147
+      internalID: -1273996781
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OVNI_1
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 276.75
+        width: 112.833336
+        height: 92.25
+      alignment: 9
+      pivot: {x: 0.5919755, y: 0.384194}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 2ba97cbaf969fbf4cb862018d2f22656
+      internalID: -1121496988
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OVNI_2
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 276.75
+        width: 112.833336
+        height: 92.25
+      alignment: 9
+      pivot: {x: 0.5919755, y: 0.384194}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ed5ca0dce236d0f408bcad2aedc4a8e3
+      internalID: 485909238
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OVNI_3
+      rect:
+        serializedVersion: 2
+        x: 336
+        y: 276.75
+        width: 112.833336
+        height: 92.25
+      alignment: 9
+      pivot: {x: 0.5919755, y: 0.384194}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 58cbf01f23e33854a8040f62e445d419
+      internalID: 1340698871
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OVNI_4
+      rect:
+        serializedVersion: 2
+        x: 448
+        y: 276.75
+        width: 112.833336
+        height: 92.25
+      alignment: 9
+      pivot: {x: 0.5919755, y: 0.384194}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d308253e1cae1ff4d96a950e70b891d7
+      internalID: 1294724646
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OVNI_5
+      rect:
+        serializedVersion: 2
+        x: 560
+        y: 276.75
+        width: 112.833336
+        height: 92.25
+      alignment: 9
+      pivot: {x: 0.5919755, y: 0.384194}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9ec9f86f21115f8419bbc7cace1f05c7
+      internalID: 2023107310
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OVNI_6
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 184.75
+        width: 112.833336
+        height: 92.25
+      alignment: 9
+      pivot: {x: 0.5919755, y: 0.384194}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 49311d775af81204bb251e1a1bd925c8
+      internalID: -1354932945
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OVNI_7
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 184.75
+        width: 112.833336
+        height: 92.25
+      alignment: 9
+      pivot: {x: 0.5919755, y: 0.384194}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 8c7b32f8156240a4a9753b09af1b0419
+      internalID: 237797193
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OVNI_8
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 184.75
+        width: 112.833336
+        height: 92.25
+      alignment: 9
+      pivot: {x: 0.5919755, y: 0.384194}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c398031eea0442b42936d598bd872986
+      internalID: -25023917
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OVNI_9
+      rect:
+        serializedVersion: 2
+        x: 336
+        y: 184.75
+        width: 112.833336
+        height: 92.25
+      alignment: 9
+      pivot: {x: 0.5919755, y: 0.384194}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: cff6e9b76c83cbc4baa75777eae59200
+      internalID: 560956219
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OVNI_10
+      rect:
+        serializedVersion: 2
+        x: 448
+        y: 184.75
+        width: 112.833336
+        height: 92.25
+      alignment: 9
+      pivot: {x: 0.5919755, y: 0.384194}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 94bb69e2bd2abb742ba050e0377914c1
+      internalID: -24916953
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OVNI_11
+      rect:
+        serializedVersion: 2
+        x: 560
+        y: 184.75
+        width: 112.833336
+        height: 92.25
+      alignment: 9
+      pivot: {x: 0.5919755, y: 0.384194}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ddc58b34ac0511e4f802df63078f9525
+      internalID: 131392136
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OVNI_12
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 92.75
+        width: 112.833336
+        height: 92.25
+      alignment: 9
+      pivot: {x: 0.5919755, y: 0.384194}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 70ad2e41b115228489f941fd440e87f0
+      internalID: 1855869244
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OVNI_13
+      rect:
+        serializedVersion: 2
+        x: 112
+        y: 92.75
+        width: 112.833336
+        height: 92.25
+      alignment: 9
+      pivot: {x: 0.5919755, y: 0.384194}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: fc493cdff69d1d04daa00eff523fe5a6
+      internalID: -878773704
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OVNI_14
+      rect:
+        serializedVersion: 2
+        x: 224
+        y: 92.75
+        width: 112.833336
+        height: 92.25
+      alignment: 9
+      pivot: {x: 0.5919755, y: 0.384194}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d1fb9354e2a6f1b41b574d34ca1e91f7
+      internalID: -1845591874
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OVNI_15
+      rect:
+        serializedVersion: 2
+        x: 336
+        y: 92.75
+        width: 112.833336
+        height: 92.25
+      alignment: 9
+      pivot: {x: 0.5919755, y: 0.384194}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 7230c1714baf0f745a4d7b5a83ff859e
+      internalID: -1778297770
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OVNI_16
+      rect:
+        serializedVersion: 2
+        x: 448
+        y: 92.75
+        width: 112.833336
+        height: 92.25
+      alignment: 9
+      pivot: {x: 0.5919755, y: 0.384194}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 27b46b92df1757b43b5e50a65a07a3a3
+      internalID: 1112303165
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: OVNI_17
+      rect:
+        serializedVersion: 2
+        x: 560
+        y: 92.75
+        width: 112.833336
+        height: 92.25
+      alignment: 9
+      pivot: {x: 0.5919755, y: 0.384194}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c3369813cafc32a4aaee85534bb9d2de
+      internalID: -1130655562
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    physicsShape: []
+    bones: []
+    spriteID: e42bcaa7913a2dd4fb72fb8df5ff362d
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    nameFileIdTable:
+      OVNI_0: -1273996781
+      OVNI_1: -1121496988
+      OVNI_10: -24916953
+      OVNI_11: 131392136
+      OVNI_12: 1855869244
+      OVNI_13: -878773704
+      OVNI_14: -1845591874
+      OVNI_15: -1778297770
+      OVNI_16: 1112303165
+      OVNI_17: -1130655562
+      OVNI_2: 485909238
+      OVNI_3: 1340698871
+      OVNI_4: 1294724646
+      OVNI_5: 2023107310
+      OVNI_6: -1354932945
+      OVNI_7: 237797193
+      OVNI_8: -25023917
+      OVNI_9: 560956219
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

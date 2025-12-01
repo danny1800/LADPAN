@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Escenas/PantallaCarga.unity
+    guid: e535db870478d1e4db7c6d6246dcfc8b
+  - enabled: 1
+    path: Assets/Escenas/Ingreso.unity
+    guid: b9f98ec46fa0bee47ba57f39f6eff823
+  - enabled: 1
+    path: Assets/Escenas/Menu.unity
+    guid: b87e1702b86e9d143873f0bd39fb98ed
+  - enabled: 1
+    path: Assets/Escenas/Acercaden.unity
+    guid: 20a3c1e80b5f27e438236b9353e98e1e
+  - enabled: 1
+    path: Assets/Escenas/Sumas.unity
+    guid: aa9dd405434134544b3a38cf365f5937
+  - enabled: 1
+    path: Assets/Escenas/Restas.unity
+    guid: 6f456f0ebd7ae0141a9425cc6018231b
+  - enabled: 1
+    path: Assets/Escenas/Multiplicaciones.unity
+    guid: abbc362f0487aab4cb8f1feac61c49a2
+  - enabled: 1
+    path: Assets/Escenas/Fracciones.unity
+    guid: f998e11cd4bd85e4b8352bc13762bcf6
+  - enabled: 1
+    path: Assets/Escenas/Juego1F.unity
+    guid: 0936061573a2c8d41a61647c43c240a9
+  - enabled: 1
+    path: Assets/Escenas/Juego1R.unity
+    guid: 13b8c6ef9c6537b409c2aa1d30274be4
+  - enabled: 1
+    path: Assets/Escenas/Juego2S.unity
+    guid: 9e5fc922f1391114a919e813d723a26f
+  - enabled: 1
+    path: Assets/Escenas/Juego3S.unity
+    guid: 56d153bf644e82642b9a91bfcebc200d
+  - enabled: 1
+    path: Assets/Escenas/JuegoM1.unity
+    guid: 7d1a3f58845e1ca4e9f9c004963330bb
+  - enabled: 1
+    path: Assets/Escenas/JuegoM2.unity
+    guid: 5d3c1c7792b88da439a95c86a87c84b8
+  m_configObjects: {}
