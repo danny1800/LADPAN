@@ -19,6 +19,13 @@ public class BubbleManager : MonoBehaviour
     [Header("Base de Datos")]
     public LevelSaver databaseScript; // Para guardar nivel
 
+    [Header("Sonidos")]
+    public AudioClip winSound;
+    public AudioClip loseSound;
+    public AudioClip popSound;
+
+    private AudioSource audioSource;
+
     // Variables de juego
     private int currentTarget;
     private int currentLevel = 1;
@@ -30,6 +37,7 @@ public class BubbleManager : MonoBehaviour
 
     void Start()
     {
+        audioSource = GetComponent<AudioSource>();
         if (gameOverText) gameOverText.SetActive(false);
 
         // Iniciar UI de puntos
@@ -91,8 +99,18 @@ public class BubbleManager : MonoBehaviour
 
         if (currentTarget == 0)
         {
+            if (winSound != null) audioSource.PlayOneShot(winSound);
             // --- GANASTE EL NIVEL ---
             // AQUÍ es el único momento donde sumamos puntos
+            if (gameOverText)
+            {
+                Text txt = gameOverText.GetComponent<Text>();
+                txt.text = "¡MUY BIEN!";
+                txt.color = Color.green; // Aquí cambias el color
+                gameOverText.SetActive(true);
+            }
+
+            // Sumar puntos
             currentScore += pointsPerLevel;
             UpdateScoreUI();
 
@@ -100,10 +118,13 @@ public class BubbleManager : MonoBehaviour
             if (databaseScript != null) databaseScript.SaveProgress(currentLevel);
 
             currentLevel++;
-            Invoke("StartLevel", 1.5f); // Siguiente nivel en 1.5 seg
+
+            // Ocultar mensaje y avanzar al siguiente nivel
+            StartCoroutine(ShowSuccessThenNextLevel()); 
         }
         else if (currentTarget < 0)
         {
+            if (loseSound != null) audioSource.PlayOneShot(loseSound);
             // --- PERDISTE (Te pasaste de la resta) ---
             Debug.Log("Juego Terminado - Te pasaste");
             if (databaseScript != null) databaseScript.SaveProgress(currentLevel);
@@ -142,7 +163,9 @@ public class BubbleManager : MonoBehaviour
     {
         if (gameOverText)
         {
-            gameOverText.GetComponent<Text>().text = "¡TE PASASTE!";
+            Text txt = gameOverText.GetComponent<Text>();
+            txt.text = "¡TE PASASTE!";
+            txt.color = Color.red; // Aquí cambias el color
             gameOverText.SetActive(true);
         }
         yield return new WaitForSeconds(2f);
@@ -155,4 +178,15 @@ public class BubbleManager : MonoBehaviour
         currentLevel = 1; // Reiniciar nivel
         StartLevel();
     }
+
+    IEnumerator ShowSuccessThenNextLevel()
+    {
+        yield return new WaitForSeconds(1.5f);
+
+        if (gameOverText)
+            gameOverText.SetActive(false);
+
+        StartLevel();
+    }
+
 }

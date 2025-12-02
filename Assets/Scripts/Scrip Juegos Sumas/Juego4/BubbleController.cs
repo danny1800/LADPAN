@@ -24,6 +24,10 @@ public class BubbleController : MonoBehaviour
 
     void PopBubble()
     {
+        if (manager != null && manager.popSound != null)
+        {
+            manager.GetComponent<AudioSource>().PlayOneShot(manager.popSound);
+        }
         if (manager != null)
         {
             manager.ProcessBubble(myValue); // Avisar al jefe
