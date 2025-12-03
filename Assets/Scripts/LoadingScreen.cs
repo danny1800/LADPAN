@@ -19,7 +19,7 @@ public class LoadingScreen : MonoBehaviour
     IEnumerator CargarEscena()
     {
         // Empezar carga real
-        AsyncOperation operacion = SceneManager.LoadSceneAsync("Menu");
+        AsyncOperation operacion = SceneManager.LoadSceneAsync("Ingreso");
         operacion.allowSceneActivation = false;
 
         float cargaFalsa = 0f;

@@ -6,13 +6,11 @@ using UnityEngine;
 public class GameManagerrr : MonoBehaviour
 {
     [Header("Referencias UI Ecuaciones")]
-    // En tu inspector veo que Row 1 Texts tiene Size 2.
-    // texts[0] será el primer número, texts[1] será el segundo.
     public Text[] row1Texts;
     public DropSlot row1Slot;
 
     [Header("UI Puntuación")]
-    public Text scoreText;    // Veo en tu foto que ya asignaste "puntos (Text)". ¡Bien!
+    public Text scoreText;
 
     public Text[] row2Texts;
     public DropSlot row2Slot;
@@ -28,10 +26,6 @@ public class GameManagerrr : MonoBehaviour
     [Header("UI Juego")]
     public GameObject gameOverText;
 
-    // --- CAMBIO IMPORTANTE ---
-    // He borrado la variable "public LevelSaver databaseScript"
-    // Al guardar este script, esa casilla vacía en tu inspector DESAPARECERÁ.
-
     // Variables de estado
     private int currentLevel = 1;
     private int correctCount = 0;
@@ -40,12 +34,23 @@ public class GameManagerrr : MonoBehaviour
     private int currentScore = 0;
     private int pointsPerLevel = 30;
 
-    // ID ÚNICO: Como es la pizarra verde, le ponemos este ID para el Ranking
+    // ID ÚNICO
     private string gameID = "JuegoRestas";
 
     void Start()
     {
         if (gameOverText) gameOverText.SetActive(false);
+
+        // --- Cargar Nivel ---
+        if (DatabaseManager.Instance != null && GameSession.CurrentUser != null)
+        {
+            currentLevel = DatabaseManager.Instance.LoadLevel(GameSession.CurrentUser.Id, gameID);
+            if (currentLevel < 1) currentLevel = 1;
+        }
+        else
+        {
+            currentLevel = 1;
+        }
 
         UpdateScoreUI();
         GenerateLevel();
@@ -55,23 +60,19 @@ public class GameManagerrr : MonoBehaviour
     {
         correctCount = 0;
 
-        // Limpiar los slots
-        row1Slot.isFilled = false;
-        row2Slot.isFilled = false;
-        row3Slot.isFilled = false;
-
-        row1Slot.GetComponentInChildren<Text>().text = "";
-        row2Slot.GetComponentInChildren<Text>().text = "";
-        row3Slot.GetComponentInChildren<Text>().text = "";
+        // 1. Limpiar slots para que el imán detecte que están vacíos
+        ResetSlot(row1Slot);
+        ResetSlot(row2Slot);
+        ResetSlot(row3Slot);
 
         List<int> correctAnswers = new List<int>();
 
-        // Generar ecuaciones
+        // 2. Generar ecuaciones
         SetupEquation(row1Texts, row1Slot, correctAnswers);
         SetupEquation(row2Texts, row2Slot, correctAnswers);
         SetupEquation(row3Texts, row3Slot, correctAnswers);
 
-        // Rellenar respuestas
+        // 3. Rellenar respuestas
         List<int> finalOptions = new List<int>(correctAnswers);
 
         while (finalOptions.Count < answerOptions.Length)
@@ -83,30 +84,50 @@ public class GameManagerrr : MonoBehaviour
 
         Shuffle(finalOptions);
 
+        // 4. REINICIAR FICHAS (Para que vuelvan abajo y se puedan volver a usar)
         for (int i = 0; i < answerOptions.Length; i++)
         {
-            answerOptions[i].numberValue = finalOptions[i];
-            answerTexts[i].text = finalOptions[i].ToString();
-            answerOptions[i].gameObject.SetActive(true);
-            answerOptions[i].GetComponent<CanvasGroup>().blocksRaycasts = true;
+            if (answerOptions[i] != null)
+            {
+                answerOptions[i].numberValue = finalOptions[i];
+                if (answerTexts[i] != null) answerTexts[i].text = finalOptions[i].ToString();
 
-            if (answersParent != null) answerOptions[i].transform.SetParent(answersParent);
-            answerOptions[i].transform.localScale = Vector3.one;
+                answerOptions[i].gameObject.SetActive(true);
+
+                // Desbloquear raycast
+                CanvasGroup cg = answerOptions[i].GetComponent<CanvasGroup>();
+                if (cg) cg.blocksRaycasts = true;
+
+                // Devolver al contenedor padre (romper el vínculo con la caja anterior)
+                if (answersParent != null) answerOptions[i].transform.SetParent(answersParent);
+                answerOptions[i].transform.localScale = Vector3.one;
+            }
         }
+    }
+
+    void ResetSlot(DropSlot slot)
+    {
+        if (slot == null) return;
+        slot.isFilled = false; // Habilita la caja para recibir nuevas fichas
+
+        Text textComp = slot.GetComponentInChildren<Text>();
+        if (textComp) textComp.text = "";
     }
 
     void SetupEquation(Text[] texts, DropSlot slot, List<int> answers)
     {
-        // LOGICA DE RESTAS (Coincide con tu pizarra verde)
         int minNum = 5 + (currentLevel * 2);
         int maxNum = 10 + (currentLevel * 5);
 
         int numA = Random.Range(minNum, maxNum);
-        int numB = Random.Range(1, numA); // B menor que A para que no de negativo
+        int numB = Random.Range(1, numA); // B menor que A para evitar negativos
         int result = numA - numB;
 
-        texts[0].text = numA.ToString();
-        texts[1].text = numB.ToString();
+        if (texts.Length > 1)
+        {
+            texts[0].text = numA.ToString();
+            texts[1].text = numB.ToString();
+        }
 
         slot.expectedResult = result;
         answers.Add(result);
@@ -121,61 +142,42 @@ public class GameManagerrr : MonoBehaviour
             if (correctCount >= 3)
             {
                 Debug.Log("¡Nivel Completado!");
-
-                // Sumar puntos
                 currentScore += pointsPerLevel;
                 UpdateScoreUI();
-
-                // Guardar progreso de NIVEL (Opcional, si quieres guardar en qué nivel va)
-                if (DatabaseManager.Instance != null && GameSession.Current != null && GameSession.Current.CurrentUser != null)
-                {
-                    DatabaseManager.Instance.SaveProgress(GameSession.Current.CurrentUser.Id, currentLevel);
-                }
-
                 currentLevel++;
+
+                SaveProgress(pointsPerLevel);
                 Invoke("GenerateLevel", 1f);
             }
         }
         else
         {
-            // AL PERDER: Guardamos el PUNTAJE final
-            SaveMyScore();
             StartCoroutine(GameOverSequence());
         }
     }
 
-    // Guardar en la DB usando el ID "JuegoRestas"
-    void SaveMyScore()
+    void SaveProgress(int puntosGanados)
     {
-        if (DatabaseManager.Instance != null && GameSession.Current != null && GameSession.Current.CurrentUser != null)
+        if (DatabaseManager.Instance != null && GameSession.CurrentUser != null)
         {
-            int myUserId = GameSession.Current.CurrentUser.Id;
-            DatabaseManager.Instance.SaveScore(myUserId, gameID, currentScore);
-            Debug.Log($"Puntaje de Restas guardado: {currentScore}");
+            int myUserId = GameSession.CurrentUser.Id;
+            DatabaseManager.Instance.GuardarProgreso(myUserId, gameID, puntosGanados, currentLevel);
         }
     }
 
     void UpdateScoreUI()
     {
-        if (scoreText != null)
-        {
-            scoreText.text = "Puntos: " + currentScore.ToString();
-        }
+        if (scoreText != null) scoreText.text = "Puntos: " + currentScore.ToString();
     }
 
     IEnumerator GameOverSequence()
     {
         if (gameOverText) gameOverText.SetActive(true);
-
         yield return new WaitForSeconds(2f);
-
         if (gameOverText) gameOverText.SetActive(false);
 
-        // Reiniciar
         currentScore = 0;
         UpdateScoreUI();
-
-        currentLevel = 1;
         GenerateLevel();
     }
 
