@@ -119,16 +119,24 @@ public class GameManagueJ9 : MonoBehaviour
         Debug.Log("Juego Terminado");
 
         if (cow != null)
-            cow.StopMovementAndPlayFinalAnimation();
+            cow.PlayLoseAnimation();
 
-        // Guardar Puntaje
         if (DataManager.Instance != null)
-        {
             DataManager.Instance.GuardarMaxPuntuacion(puntajeActual);
-        }
 
         if (panelGameOver != null) panelGameOver.SetActive(true);
+
+        StartCoroutine(RestartGame());
     }
+
+    IEnumerator RestartGame()
+    {
+        yield return new WaitForSeconds(2f); // tiempo para ver la vaca
+        UnityEngine.SceneManagement.SceneManager.LoadScene(
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene().name
+        );
+    }
+
 
     // --- Métodos para los Botones (UI) ---
 
