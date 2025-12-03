@@ -25,9 +25,10 @@ public class GameManagerrr_suma : MonoBehaviour
 
     [Header("UI Juego")]
     public GameObject gameOverText;
+    public PlayerAnimations playerAnim;
 
-    // --- CAMBIO: Eliminamos la referencia vieja "LevelSaver" ---
-    // public LevelSaver databaseScript; // BORRADO
+    public AudioSource correctSound;
+    public AudioSource wrongSound;
 
     // Variables internas
     private int currentLevel = 1;
@@ -136,6 +137,12 @@ public class GameManagerrr_suma : MonoBehaviour
             {
                 Debug.Log("Nivel completado");
 
+                if (correctSound != null)
+                    correctSound.Play();
+
+                if (playerAnim != null)
+                    playerAnim.PlayCorrectAnimations();
+
                 // Sumar puntos
                 currentScore += pointsPerLevel;
                 UpdateScoreUI();
@@ -152,10 +159,27 @@ public class GameManagerrr_suma : MonoBehaviour
         }
         else
         {
+            if (wrongSound != null)
+                wrongSound.Play();
+
+            if (playerAnim != null)
+                playerAnim.PlayWrongAnimations();
             // AL PERDER: Guardamos PUNTAJE
             SaveMyScore();
             StartCoroutine(GameOverSequence());
         }
+    }
+
+    IEnumerator RestartAfterFail()
+    {
+        yield return new WaitForSeconds(3f);
+
+        // Reiniciar puntos y nivel
+        currentScore = 0;
+        UpdateScoreUI();
+
+        currentLevel = 1;
+        GenerateLevel();
     }
 
     // --- NUEVO: Guardar en DB ---
