@@ -63,11 +63,11 @@ public class TTSManager : MonoBehaviour
                             ttsObject.Call<int>("setPitch", 1);   // tono
                             ttsObject.Call<int>("setSpeechRate", 1); // velocidad
 
-                            // Registrar el OnUtteranceProgressListener
+                            // Registrar el OnUtteranceProgressListener para saber cuando termina de hablar
                             ttsObject.Call("setOnUtteranceProgressListener", new UtteranceListener(
-                                onStartAction: id => { isSpeaking = true; },
-                                onDoneAction: id => { isSpeaking = false; },
-                                onErrorAction: id => { isSpeaking = false; }
+                                onStartId => { isSpeaking = true; },
+                                onDoneId => { isSpeaking = false; },
+                                onErrorId => { isSpeaking = false; }
                             ));
                         }
                     })
@@ -82,7 +82,7 @@ public class TTSManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Pide que se diga un texto. NO bloqueante.
+    /// Pide que se diga un texto. NO bloqueante. Usa QUEUE_ADD para no cortar lo que ya esté hablando.
     /// </summary>
     public void Speak(string message)
     {
@@ -93,12 +93,16 @@ public class TTSManager : MonoBehaviour
             return;
         }
 
+        // Generar ID único por frase
         string utteranceId = Guid.NewGuid().ToString();
+
+        // QUEUE_ADD = 1 (no flush)
         int QUEUE_ADD = 1;
 
+        // Llamada a speak(text, queueMode, paramsBundle, utteranceId)
+        // Para compatibilidad con versiones antiguas algunos usan null bundle; usamos null
         try
         {
-            // speak(text, queueMode, paramsBundle, utteranceId)
             ttsObject.Call<int>("speak", message, QUEUE_ADD, null, utteranceId);
         }
         catch (Exception ex)
@@ -106,7 +110,7 @@ public class TTSManager : MonoBehaviour
             Debug.LogError("Error al llamar a speak: " + ex.Message);
         }
 #else
-        Debug.Log("TTS (Editor) dice: " + message);
+        Debug.Log("TTS dice: " + message);
 #endif
     }
 
@@ -129,38 +133,36 @@ public class TTSManager : MonoBehaviour
 
 #if UNITY_ANDROID && !UNITY_EDITOR
     // Listener para detectar inicio/fin de utterances
-    // AQUI ESTABA EL ERROR: Conflictos de nombres
     private class UtteranceListener : AndroidJavaProxy
     {
-        // Variables renombradas con guion bajo (_)
-        private readonly Action<string> _onStart;
-        private readonly Action<string> _onDone;
-        private readonly Action<string> _onError;
+        private readonly Action<string> onStart;
+        private readonly Action<string> onDone;
+        private readonly Action<string> onError;
 
-        public UtteranceListener(Action<string> onStartAction, Action<string> onDoneAction, Action<string> onErrorAction)
+        public UtteranceListener(Action<string> onStart, Action<string> onDone, Action<string> onError)
             : base("android.speech.tts.UtteranceProgressListener")
         {
-            _onStart = onStartAction;
-            _onDone = onDoneAction;
-            _onError = onErrorAction;
+            this.onStart = onStart;
+            this.onDone = onDone;
+            this.onError = onError;
         }
 
-        // Métodos obligatorios de Java (estos nombres NO se pueden cambiar)
+        // Firma exacta requerida por la interfaz
         public void onStart(string utteranceId)
         {
-            // Ejecutamos la variable renombrada
-            _onStart?.Invoke(utteranceId);
+            onStart?.Invoke(utteranceId);
         }
 
         public void onDone(string utteranceId)
         {
-            _onDone?.Invoke(utteranceId);
+            onDone?.Invoke(utteranceId);
         }
 
         public void onError(string utteranceId)
         {
-            _onError?.Invoke(utteranceId);
+            onError?.Invoke(utteranceId);
         }
     }
 #endif
 }
+

@@ -933,6 +933,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 690828965}
+  - component: {fileID: 690828964}
   - component: {fileID: 690828966}
   m_Layer: 0
   m_Name: FuncionBotones
@@ -941,6 +942,18 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &690828964
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 690828963}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cc83f8a5e28018c4180ef92526c94d01, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!4 &690828965
 Transform:
   m_ObjectHideFlags: 0
