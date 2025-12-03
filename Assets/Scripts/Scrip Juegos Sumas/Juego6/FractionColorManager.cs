@@ -6,21 +6,18 @@ using UnityEngine.UI;
 public class FractionColorManager : MonoBehaviour
 {
     [Header("Referencias UI")]
-    public Text fractionText; // Muestra la fracción
+    public Text fractionText; // Muestra la fracción (ej: 2/4)
     public Text levelText;
     public Text winLoseText;
     public GameObject gameOverText;
 
     [Header("UI Puntuación")]
-    public Text scoreText;    // Arrastra aquí el texto de Puntos
+    public Text scoreText;
 
     [Header("Juego")]
     public Transform circleContainer; // Objeto vacío donde nacen las rebanadas
     public GameObject slicePrefab;    // Tu prefab de la rebanada
     public Button checkButton;        // Botón comprobar
-
-    // --- CAMBIO: Referencia vieja borrada ---
-    // public LevelSaver databaseScript; // BORRADO
 
     // Variables internas
     private int currentLevel = 1;
@@ -28,9 +25,9 @@ public class FractionColorManager : MonoBehaviour
     private int denominator; // Total de rebanadas
     private List<SliceController> currentSlices = new List<SliceController>();
 
-    // Variables de Puntuación
+    // --- SISTEMA DE PUNTUACIÓN (Igualado al primer código) ---
     private int currentScore = 0;
-    private int pointsPerLevel = 50;
+    private int pointsPerLevel = 100; // CAMBIO: Ahora da 100 puntos por nivel
 
     // ID ÚNICO PARA ESTE JUEGO
     private string gameID = "JuegoFraccionesColor";
@@ -40,11 +37,24 @@ public class FractionColorManager : MonoBehaviour
         if (winLoseText) winLoseText.gameObject.SetActive(false);
         if (gameOverText) gameOverText.SetActive(false);
 
-        checkButton.onClick.AddListener(CheckAnswer);
+        if (checkButton) checkButton.onClick.AddListener(CheckAnswer);
 
-        // Iniciar puntos
+        // --- 1. CARGAR NIVEL DESDE LA BASE DE DATOS ---
+        if (DatabaseManager.Instance != null && GameSession.CurrentUser != null)
+        {
+            // Pedimos el nivel guardado para este juego específico
+            currentLevel = DatabaseManager.Instance.LoadLevel(GameSession.CurrentUser.Id, gameID);
+
+            // Si es la primera vez, empezamos en nivel 1
+            if (currentLevel < 1) currentLevel = 1;
+        }
+        else
+        {
+            Debug.Log("Modo Prueba: Sin usuario. Nivel 1.");
+            currentLevel = 1;
+        }
+
         UpdateScoreUI();
-
         StartLevel();
     }
 
@@ -55,15 +65,15 @@ public class FractionColorManager : MonoBehaviour
         currentSlices.Clear();
 
         if (winLoseText) winLoseText.gameObject.SetActive(false);
-        if (levelText) levelText.text = "Level: " + currentLevel;
+        if (levelText) levelText.text = "Nivel: " + currentLevel;
 
-        // 2. DIFICULTAD
+        // 2. DIFICULTAD (Aumenta partes según el nivel)
         int minParts = 2;
-        int maxParts = 3 + currentLevel;
-        if (maxParts > 8) maxParts = 8; // Máximo visual recomendado
+        int maxParts = 3 + (currentLevel / 2); // Sube dificultad más lento
+        if (maxParts > 8) maxParts = 8; // Máximo visual recomendado para que no se vea feo
 
         denominator = Random.Range(minParts, maxParts + 1);
-        numerator = Random.Range(1, denominator);
+        numerator = Random.Range(1, denominator); // Siempre menor al denominador
 
         // 3. Mostrar Texto
         fractionText.text = numerator + "\n—\n" + denominator;
@@ -80,17 +90,25 @@ public class FractionColorManager : MonoBehaviour
         for (int i = 0; i < parts; i++)
         {
             GameObject newSlice = Instantiate(slicePrefab, circleContainer);
+
+            // Asumimos que tu prefab tiene el script SliceController
             SliceController controller = newSlice.GetComponent<SliceController>();
 
-            float rotationZ = -(degreesPerSlice * i);
-            controller.Setup(fillAmount, rotationZ);
+            if (controller != null)
+            {
+                float rotationZ = -(degreesPerSlice * i);
+                controller.Setup(fillAmount, rotationZ);
 
-            // Truco del botón
-            Button btn = newSlice.AddComponent<Button>();
-            btn.transition = Selectable.Transition.None;
-            btn.onClick.AddListener(controller.OnClick);
+                // Truco del botón: Agregar funcionalidad de click dinámicamente
+                Button btn = newSlice.GetComponent<Button>();
+                if (btn == null) btn = newSlice.AddComponent<Button>(); // Si no tiene botón, se lo ponemos
 
-            currentSlices.Add(controller);
+                btn.transition = Selectable.Transition.None;
+                btn.onClick.RemoveAllListeners();
+                btn.onClick.AddListener(controller.OnClick);
+
+                currentSlices.Add(controller);
+            }
         }
     }
 
@@ -124,42 +142,41 @@ public class FractionColorManager : MonoBehaviour
             winLoseText.color = success ? Color.green : Color.red;
         }
 
-        checkButton.interactable = false;
+        if (checkButton) checkButton.interactable = false;
         yield return new WaitForSeconds(1.5f);
-        checkButton.interactable = true;
+        if (checkButton) checkButton.interactable = true;
 
         if (success)
         {
-            // Sumar puntos
+            // 1. Sumar puntos (Ahora suma 100)
             currentScore += pointsPerLevel;
             UpdateScoreUI();
 
-            // Guardar progreso de NIVEL
-            if (DatabaseManager.Instance != null && GameSession.Current != null && GameSession.Current.CurrentUser != null)
-            {
-                DatabaseManager.Instance.SaveProgress(GameSession.Current.CurrentUser.Id, currentLevel);
-            }
-
+            // 2. Subir nivel
             currentLevel++;
+
+            // 3. --- GUARDAR PROGRESO EN BD ---
+            SaveProgress(pointsPerLevel);
+
             StartLevel();
         }
         else
         {
-            // AL PERDER: Guardar PUNTAJE
-            SaveMyScore();
+            // AL PERDER: Game Over
             StartCoroutine(GameOverSequence());
         }
     }
 
-    // --- NUEVO: Guardar en la DB ---
-    void SaveMyScore()
+    // --- NUEVO: Guardar Unificado ---
+    void SaveProgress(int puntosGanados)
     {
-        if (DatabaseManager.Instance != null && GameSession.Current != null && GameSession.Current.CurrentUser != null)
+        if (DatabaseManager.Instance != null && GameSession.CurrentUser != null)
         {
-            int myUserId = GameSession.Current.CurrentUser.Id;
+            int myUserId = GameSession.CurrentUser.Id;
             // Guardamos con el ID "JuegoFraccionesColor"
-            DatabaseManager.Instance.SaveScore(myUserId, gameID, currentScore);
-            Debug.Log($"Puntaje de Fracciones (Color) guardado: {currentScore}");
+            DatabaseManager.Instance.GuardarProgreso(myUserId, gameID, puntosGanados, currentLevel);
+
+            Debug.Log($"Progreso Color guardado: Nivel {currentLevel}");
         }
     }
 
@@ -167,14 +184,20 @@ public class FractionColorManager : MonoBehaviour
     {
         if (winLoseText) winLoseText.gameObject.SetActive(false);
         if (gameOverText) gameOverText.SetActive(true);
+
         yield return new WaitForSeconds(2f);
+
         if (gameOverText) gameOverText.SetActive(false);
 
-        // Reiniciar Puntos
+        // --- LÓGICA DE DERROTA IDENTICA AL PRIMER JUEGO ---
+
+        // 1. Reiniciar Puntos de la sesión
         currentScore = 0;
         UpdateScoreUI();
 
+        // 2. Reiniciar nivel (Descomentado para igualar dificultad al primer juego)
         currentLevel = 1;
+
         StartLevel();
     }
 

@@ -1,4 +1,4 @@
-ï»¿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro; // Usamos TextMeshPro
 using UnityEngine;
@@ -10,10 +10,10 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI centerText; // El resultado objetivo
     public TextMeshProUGUI levelText;
     public Button confirmButton;
-    public List<PetalController> petals; // Arrastra todos los pÃ©talos aquÃ­
+    public List<PetalController> petals; // Arrastra todos los pétalos aquí
 
-    [Header("UI PuntuaciÃ³n")]
-    public TextMeshProUGUI scoreText; // Arrastra aquÃ­ tu texto de "Puntos: 0"
+    [Header("UI Puntuación")]
+    public TextMeshProUGUI scoreText; // Arrastra aquí tu texto de "Puntos: 0"
 
     [Header("UI Juego")]
     public GameObject gameOverText; // Texto de "GAME OVER"
@@ -21,36 +21,31 @@ public class GameManager : MonoBehaviour
     [Header("Estado del Juego")]
     public int currentLevel = 1;
     private int targetResult;
-    private TTSManager tts;
 
-    // Variables de PuntuaciÃ³n
+    // Variables de Puntuación
     private int currentScore = 0;
     private int pointsPerLevel = 15;
 
-    // ID ÃšNICO PARA ESTE JUEGO
+    // ID ÚNICO PARA ESTE JUEGO
     private string gameID = "JuegoFlores";
 
     void Start()
     {
-        tts = FindObjectOfType<TTSManager>();
-
         // Ocultar Game Over al inicio
         if (gameOverText) gameOverText.SetActive(false);
 
-        // Iniciar UI de puntos
-        UpdateScoreUI();
-
-        // --- CARGA DE NIVEL (Opcional) ---
-        // Si quieres que el juego recuerde en quÃ© nivel se quedÃ³ el usuario:
-        if (DatabaseManager.Instance != null && GameSession.Current != null && GameSession.Current.CurrentUser != null)
+        // --- 1. CARGA DE NIVEL DESDE DB ---
+        if (DatabaseManager.Instance != null && GameSession.CurrentUser != null)
         {
-            int myUserId = GameSession.Current.CurrentUser.Id;
-            // Cargamos el nivel guardado
-            currentLevel = DatabaseManager.Instance.LoadLevel(myUserId);
+            // Cargamos el nivel guardado para "JuegoFlores"
+            currentLevel = DatabaseManager.Instance.LoadLevel(GameSession.CurrentUser.Id, gameID);
+
+            // Si es 0 (primera vez), empezamos en 1
+            if (currentLevel < 1) currentLevel = 1;
         }
         else
         {
-            Debug.LogWarning("Modo prueba: Iniciando en Nivel 1.");
+            Debug.LogWarning("Modo prueba (Sin usuario): Nivel 1.");
             currentLevel = 1;
         }
 
@@ -59,36 +54,13 @@ public class GameManager : MonoBehaviour
         confirmButton.onClick.RemoveAllListeners();
         confirmButton.onClick.AddListener(CheckAnswer);
 
-        StartCoroutine(StartWithVoice());
-
-    }
-
-    IEnumerator StartWithVoice()
-    {
-        float timeout = 5f;
-        float timer = 0f;
-
-        while ((tts == null || !tts.IsReady) && timer < timeout)
-        {
-            yield return new WaitForSeconds(0.1f);
-            timer += 0.1f;
-        }
-
+        UpdateScoreUI();
         GenerateLevel();
-
-        if (tts != null && tts.IsReady)
-        {
-            tts.Speak("QuÃ© nÃºmeros multiplicados dan " + targetResult);
-        }
-        else
-        {
-            Debug.LogWarning("TTS no disponible en StartWithVoice (timeout).");
-        }
     }
 
     void GenerateLevel()
     {
-        // LÃ³gica matemÃ¡tica (MultiplicaciÃ³n)
+        // Lógica matemática (Multiplicación)
         int minRange = 2 + (currentLevel / 5);
         int maxRange = 10 + (currentLevel / 2);
 
@@ -98,24 +70,18 @@ public class GameManager : MonoBehaviour
         targetResult = factorA * factorB;
         centerText.text = targetResult.ToString();
 
-        TTSManager tts = FindObjectOfType<TTSManager>();
-        if (tts != null)
-        {
-            tts.Speak("QuÃ© nÃºmeros multiplicados dan " + targetResult);
-        }
-
         // Preparar lista de valores
         List<int> values = new List<int>();
         values.Add(factorA);
         values.Add(factorB);
 
-        // Llenar el resto con nÃºmeros random (distractores)
+        // Llenar el resto con números random (distractores)
         for (int i = 2; i < petals.Count; i++)
         {
             int randomVal = Random.Range(2, maxRange + 5);
 
             // Evitar que el distractor sea igual al resultado
-            while (randomVal == targetResult)
+            while (randomVal == targetResult || values.Contains(randomVal))
             {
                 randomVal = Random.Range(2, maxRange + 5);
             }
@@ -125,61 +91,15 @@ public class GameManager : MonoBehaviour
         // Barajar
         Shuffle(values);
 
-        // Asignar a los pÃ©talos
+        // Asignar a los pétalos
         for (int i = 0; i < petals.Count; i++)
         {
             if (i < values.Count)
             {
-                // AsegÃºrate que tu script PetalController tenga el mÃ©todo Setup
                 if (petals[i] != null) petals[i].Setup(values[i]);
             }
         }
     }
-
-    IEnumerator CorrectSequence()
-    {
-        // Pedimos que diga Correcto (esto ahora se encola y no se corta)
-        tts?.Speak("Correcto");
-
-        // Esperamos hasta que el TTS haya terminado (o timeout 3s)
-        float timeout = 3f;
-        float timer = 0f;
-        while ((tts != null && tts.IsSpeaking) && timer < timeout)
-        {
-            yield return new WaitForSeconds(0.1f);
-            timer += 0.1f;
-        }
-
-        // En caso de timeout, aÃºn continuamos despuÃ©s de 0.2s extra
-        if (timer >= timeout)
-            yield return new WaitForSeconds(0.2f);
-
-        // Sumar puntos y pasar de nivel
-        currentScore += pointsPerLevel;
-        UpdateScoreUI();
-
-        LevelUp(); // LevelUp genera el siguiente nivel (puedes mantener el pequeÃ±o delay si quieres)
-    }
-
-    IEnumerator IncorrectSequence()
-    {
-        tts?.Speak("Incorrecto");
-
-        float timeout = 3f;
-        float timer = 0f;
-        while ((tts != null && tts.IsSpeaking) && timer < timeout)
-        {
-            yield return new WaitForSeconds(0.1f);
-            timer += 0.1f;
-        }
-
-        if (timer >= timeout)
-            yield return new WaitForSeconds(0.2f);
-
-        SaveMyScore();
-        StartCoroutine(GameOverSequence());
-    }
-
 
     void CheckAnswer()
     {
@@ -195,14 +115,23 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        // VALIDACIÃ“N: Necesitamos al menos 2 pÃ©talos y que el producto sea exacto
+        // VALIDACIÓN: Necesitamos al menos 2 pétalos y que el producto sea exacto
         if (petalsSelectedCount >= 2 && currentProduct == targetResult)
         {
-            StartCoroutine(CorrectSequence());
+            Debug.Log("¡Correcto!");
+
+            // 1. Sumar puntos visuales
+            currentScore += pointsPerLevel;
+            UpdateScoreUI();
+
+            // 2. Subir Nivel
+            LevelUp();
         }
         else
         {
-            StartCoroutine(IncorrectSequence());
+            Debug.Log("Incorrecto. Game Over.");
+            // Al perder NO guardamos progreso (opcional), solo mostramos game over
+            StartCoroutine(GameOverSequence());
         }
     }
 
@@ -211,25 +140,24 @@ public class GameManager : MonoBehaviour
         currentLevel++;
         levelText.text = "Nivel: " + currentLevel;
 
-        // --- GUARDADO DE PROGRESO (NIVEL) ---
-        if (DatabaseManager.Instance != null && GameSession.Current != null && GameSession.Current.CurrentUser != null)
-        {
-            int myUserId = GameSession.Current.CurrentUser.Id;
-            DatabaseManager.Instance.SaveProgress(myUserId, currentLevel);
-        }
+        // --- 3. GUARDADO UNIFICADO ---
+        // Guardamos los puntos ganados y el nuevo nivel alcanzado
+        SaveProgress(pointsPerLevel);
 
         GenerateLevel();
     }
 
-    // --- NUEVO: Guardar PUNTAJE en la DB ---
-    void SaveMyScore()
+    // --- NUEVO: Función para guardar ---
+    void SaveProgress(int puntosGanados)
     {
-        if (DatabaseManager.Instance != null && GameSession.Current != null && GameSession.Current.CurrentUser != null)
+        if (DatabaseManager.Instance != null && GameSession.CurrentUser != null)
         {
-            int myUserId = GameSession.Current.CurrentUser.Id;
-            // Guardamos con el ID "JuegoFlores"
-            DatabaseManager.Instance.SaveScore(myUserId, gameID, currentScore);
-            Debug.Log($"Puntaje de Flores guardado: {currentScore}");
+            int myUserId = GameSession.CurrentUser.Id;
+
+            // Guardamos: ID Alumno, "JuegoFlores", Puntos a sumar, Nivel actual
+            DatabaseManager.Instance.GuardarProgreso(myUserId, gameID, puntosGanados, currentLevel);
+
+            Debug.Log($"Progreso Flores guardado: Nivel {currentLevel}");
         }
     }
 
@@ -238,7 +166,7 @@ public class GameManager : MonoBehaviour
     {
         if (gameOverText) gameOverText.SetActive(true);
 
-        // Bloquear botÃ³n
+        // Bloquear botón
         confirmButton.interactable = false;
 
         yield return new WaitForSeconds(2f);
@@ -246,13 +174,13 @@ public class GameManager : MonoBehaviour
         if (gameOverText) gameOverText.SetActive(false);
         confirmButton.interactable = true;
 
-        // Reiniciar puntos y nivel
+        // Reiniciar puntos de sesión
         currentScore = 0;
         UpdateScoreUI();
 
-        // Reinicia a nivel 1
-        currentLevel = 1;
-        levelText.text = "Nivel: " + currentLevel;
+        // Opcional: Reiniciar nivel al perder
+        // currentLevel = 1;
+        // levelText.text = "Nivel: " + currentLevel;
 
         GenerateLevel();
     }

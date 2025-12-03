@@ -1,66 +1,160 @@
 using UnityEngine;
-using UnityEngine.UI; // Necesario para controlar la UI
-using UnityEngine.SceneManagement; // Necesario para cambiar de escena
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class LoginUI : MonoBehaviour
 {
-    [Header("Arrastra los objetos aquí")]
-    public InputField nameInput;  // La caja de texto
-    public Button loginButton;    // El botón
-    public Text errorText;        // El texto para mensajes
+    [Header("UI Principal")]
+    public InputField nameInput;
+    public Button actionButton; // El botón "Jugar" o "Entrar"
+    public Text errorText;
+
+    [Header("UI Contraseña (Oculto al inicio)")]
+    public GameObject passwordPanel; // Panel que contiene el campo de contraseña
+    public InputField passwordInput;
 
     [Header("Configuración")]
-    public string nextSceneName = "GameScene"; // EL NOMBRE EXACTO DE TU ESCENA DE JUEGO
+    public string sceneMenuAlumnos = "MenuMinijuegos";
+    public string scenePanelProfesor = "EscenaProfesor";
+
+    // Estado interno
+    private bool esperandoPassword = false;
+    private string nombreCached = "";
 
     void Start()
     {
-        // Limpiamos el texto de error al iniciar
+        if (passwordPanel) passwordPanel.SetActive(false);
         if (errorText) errorText.text = "";
 
-        // Le decimos al botón qué hacer cuando le hagan click
-        loginButton.onClick.AddListener(HacerLogin);
+        GameSession.CurrentUser = null;
+
+        actionButton.onClick.AddListener(ProcesarEntrada);
     }
 
-    void HacerLogin()
+    void ProcesarEntrada()
     {
-        string nombreUsuario = nameInput.text.Trim();
-
-        // 1. Validar que escribió algo
-        if (string.IsNullOrEmpty(nombreUsuario))
+        if (esperandoPassword)
         {
-            errorText.text = "¡Escribe un nombre para jugar!";
-            errorText.color = Color.red;
-            return;
-        }
-
-        if (nombreUsuario.Length < 3)
-        {
-            errorText.text = "El nombre es muy corto (mínimo 3 letras).";
-            errorText.color = Color.red;
-            return;
-        }
-
-        // 2. Conectar con la Base de Datos
-        // Usamos GameSession para registrar al usuario
-        if (GameSession.Current != null)
-        {
-            GameSession.Current.Login(nombreUsuario);
-
-            errorText.text = "¡Bienvenido " + nombreUsuario + "!";
-            errorText.color = Color.green;
-
-            // 3. Cambiar de escena después de 1 segundo
-            Invoke("CargarJuego", 1.0f);
+            // FASE 2: Ya sabemos que es profe, verificamos la contraseña
+            VerificarPasswordProfesor();
         }
         else
         {
-            Debug.LogError("¡Falta el objeto SystemManagers en la escena!");
-            errorText.text = "Error interno del sistema.";
+            // FASE 1: Revisamos el nombre
+            VerificarNombre();
         }
     }
 
-    void CargarJuego()
+    void VerificarNombre()
     {
-        SceneManager.LoadScene(nextSceneName);
+        string nombre = nameInput.text.Trim();
+
+        if (string.IsNullOrEmpty(nombre) || nombre.Length < 3)
+        {
+            MostrarError("Escribe un nombre válido (mínimo 3 letras).");
+            return;
+        }
+
+        if (DatabaseManager.Instance == null)
+        {
+            MostrarError("Error: Base de Datos no conectada.");
+            return;
+        }
+
+        // 1. ¿ES PROFESOR?
+        if (DatabaseManager.Instance.EsProfesor(nombre))
+        {
+            // ¡Es profe! Pedir contraseña
+            nombreCached = nombre;
+            ActivarModoPassword();
+        }
+        else
+        {
+            // 2. NO ES PROFESOR -> Es alumno (Login o Registro directo)
+            EntrarComoAlumno(nombre);
+        }
+    }
+
+    void ActivarModoPassword()
+    {
+        esperandoPassword = true;
+        passwordPanel.SetActive(true); // Aparece el campo de pass
+        nameInput.interactable = false; // Bloqueamos el nombre para que no lo cambie
+        errorText.text = "Hola Profe. Ingresa tu clave:";
+        errorText.color = Color.blue;
+
+        // Cambiamos el texto del botón si tiene componente de texto
+        Text btnText = actionButton.GetComponentInChildren<Text>();
+        if (btnText) btnText.text = "VERIFICAR";
+    }
+
+    void VerificarPasswordProfesor()
+    {
+        string pass = passwordInput.text;
+
+        // Intentar Login
+        Usuario profe = DatabaseManager.Instance.Login(nombreCached, pass);
+
+        if (profe != null)
+        {
+            // Login Exitoso
+            GameSession.CurrentUser = profe;
+            SceneManager.LoadScene(scenePanelProfesor);
+        }
+        else
+        {
+            MostrarError("Contraseña incorrecta.");
+            passwordInput.text = ""; // Limpiar campo para reintentar
+        }
+    }
+
+    void EntrarComoAlumno(string nombre)
+    {
+        Usuario alumno;
+
+        // Intentar registrar
+        bool registro = DatabaseManager.Instance.RegistrarAlumno(nombre, out alumno);
+
+        // Si ya existe, loguear
+        if (!registro)
+        {
+            alumno = DatabaseManager.Instance.Login(nombre);
+        }
+
+        if (alumno != null)
+        {
+            GameSession.CurrentUser = alumno;
+            errorText.text = "¡Bienvenido " + nombre + "!";
+            errorText.color = Color.green;
+            actionButton.interactable = false;
+            Invoke("IrMenuAlumnos", 1.0f);
+        }
+    }
+
+    void IrMenuAlumnos()
+    {
+        SceneManager.LoadScene(sceneMenuAlumnos);
+    }
+
+    void MostrarError(string msg)
+    {
+        if (errorText)
+        {
+            errorText.text = msg;
+            errorText.color = Color.red;
+        }
+    }
+
+    // Función extra para el botón "Cancelar" si el profe se equivocó de nombre
+    public void CancelarLoginProfe()
+    {
+        esperandoPassword = false;
+        passwordPanel.SetActive(false);
+        nameInput.interactable = true;
+        passwordInput.text = "";
+        errorText.text = "";
+
+        Text btnText = actionButton.GetComponentInChildren<Text>();
+        if (btnText) btnText.text = "JUGAR";
     }
 }

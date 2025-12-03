@@ -12,7 +12,7 @@ public class PetalController : MonoBehaviour
     // Quitamos [SerializeField] porque ya no hace falta arrastrarlo manual
     private TextMeshProUGUI numberText;
     private Image petalImage;
-    private AudioSource audioSource;
+
     public Color defaultColor = Color.white;
     public Color selectedColor = Color.yellow;
 
@@ -24,11 +24,10 @@ public class PetalController : MonoBehaviour
         // Esto busca los componentes automáticamente dentro del mismo objeto
         petalImage = GetComponent<Image>();
         numberText = GetComponentInChildren<TextMeshProUGUI>();
-        audioSource = GetComponent<AudioSource>();
+
         // Verificación de seguridad
         if (petalImage == null) Debug.LogError("¡Falta el componente Image en el pétalo!");
         if (numberText == null) Debug.LogError("¡Falta el componente TextMeshPro en el pétalo!");
-        if (audioSource == null) Debug.LogError("¡Falta AudioSource en el pétalo!");
     }
 
     void Start()
@@ -54,8 +53,6 @@ public class PetalController : MonoBehaviour
 
     void ToggleSelection()
     {
-        if (audioSource != null)
-            audioSource.Play();
         isSelected = !isSelected;
         UpdateVisuals();
     }

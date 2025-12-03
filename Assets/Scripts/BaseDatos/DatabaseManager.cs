@@ -1,24 +1,22 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using SQLite;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
 
 public class DatabaseManager : MonoBehaviour
 {
     public static DatabaseManager Instance;
-    private string dbPath;
-    private SQLiteConnection connection;
+    private SQLiteConnection _connection;
+    private string _dbPath;
 
     void Awake()
     {
-        // Singleton para acceder fácil desde cualquier minijuego
         if (Instance == null)
         {
             Instance = this;
             DontDestroyOnLoad(gameObject);
-            InitializeDatabase();
+            IniciarBaseDeDatos();
         }
         else
         {
@@ -26,111 +24,180 @@ public class DatabaseManager : MonoBehaviour
         }
     }
 
-    private void InitializeDatabase()
+    private void IniciarBaseDeDatos()
     {
-        // Define la ruta segura para guardar datos en Android/iOS/PC
-        dbPath = Path.Combine(Application.persistentDataPath, "GameDatabase.db");
+        string fileName = "EscuelaGames.db";
+        _dbPath = Path.Combine(Application.persistentDataPath, fileName);
 
-        // Abre la conexión
-        connection = new SQLiteConnection(dbPath);
+        _connection = new SQLiteConnection(_dbPath);
 
-        // Crea las tablas si no existen
-        connection.CreateTable<UserProfile>();
-        connection.CreateTable<GameScore>();
+        // Crear tablas si no existen
+        _connection.CreateTable<Usuario>();
+        _connection.CreateTable<ProgresoJuego>();
 
-        Debug.Log("Base de datos inicializada en: " + dbPath);
+        Debug.Log("Base de datos iniciada en: " + _dbPath);
+        CrearProfesorDefault();
     }
 
-    // --- FUNCIONES PARA USUARIOS ---
+    // --- GESTIÓN DE USUARIOS ---
 
-    public UserProfile RegisterOrLoginUser(string username)
+    private void CrearProfesorDefault()
     {
-        // Buscar si ya existe
-        var existingUser = connection.Table<UserProfile>().Where(u => u.Username == username).FirstOrDefault();
-
-        if (existingUser != null)
+        // Verificar si ya existe el profe
+        var profe = _connection.Table<Usuario>().FirstOrDefault(u => u.EsProfesor);
+        if (profe == null)
         {
-            Debug.Log("Usuario logueado: " + username);
-            return existingUser;
+            var nuevoProfe = new Usuario
+            {
+                Nombre = "Profesor",
+                EsProfesor = true,
+                Password = "admin", // Contraseña simple
+                GlobalId = System.Guid.NewGuid().ToString(),
+                FechaRegistro = System.DateTime.Now
+            };
+            _connection.Insert(nuevoProfe);
+            Debug.Log("Profesor creado por defecto (Pass: admin)");
+        }
+    }
+
+    public bool RegistrarAlumno(string nombre, out Usuario usuarioCreado)
+    {
+        usuarioCreado = null;
+
+        // Validar duplicados (Case Insensitive)
+        var existente = _connection.Table<Usuario>()
+                            .FirstOrDefault(u => u.Nombre.ToLower() == nombre.ToLower() && !u.EsProfesor);
+
+        if (existente != null) return false; // Ya existe
+
+        usuarioCreado = new Usuario
+        {
+            Nombre = nombre,
+            EsProfesor = false,
+            GlobalId = System.Guid.NewGuid().ToString(),
+            FechaRegistro = System.DateTime.Now
+        };
+
+        _connection.Insert(usuarioCreado);
+        return true;
+    }
+
+    public Usuario Login(string nombre, string password = "")
+    {
+        // Si intenta entrar como profesor (revisa si es profesor en la BD)
+        if (EsProfesor(nombre))
+        {
+            return _connection.Table<Usuario>().FirstOrDefault(u => u.Nombre.ToLower() == nombre.ToLower() && u.EsProfesor && u.Password == password);
+        }
+        else
+        {
+            return _connection.Table<Usuario>().FirstOrDefault(u => u.Nombre.ToLower() == nombre.ToLower() && !u.EsProfesor);
+        }
+    }
+
+    public bool EsProfesor(string nombreCompleto)
+    {
+        var profe = _connection.Table<Usuario>()
+                    .FirstOrDefault(u => u.Nombre.ToLower() == nombreCompleto.ToLower() && u.EsProfesor);
+
+        return profe != null;
+    }
+
+    // --- GESTIÓN DE JUEGO ---
+
+    public void GuardarProgreso(int usuarioId, string gameID, int puntajeSumar, int nivelAlcanzado)
+    {
+        var progreso = _connection.Table<ProgresoJuego>()
+                            .FirstOrDefault(p => p.UsuarioId == usuarioId && p.GameID == gameID);
+
+        if (progreso == null)
+        {
+            progreso = new ProgresoJuego
+            {
+                UsuarioId = usuarioId,
+                GameID = gameID,
+                NivelMaximo = nivelAlcanzado,
+                PuntajeAcumulado = puntajeSumar,
+                Sincronizado = false,
+                UltimaJugada = System.DateTime.Now
+            };
+            _connection.Insert(progreso);
+        }
+        else
+        {
+            progreso.PuntajeAcumulado += puntajeSumar;
+            if (nivelAlcanzado > progreso.NivelMaximo)
+            {
+                progreso.NivelMaximo = nivelAlcanzado;
+            }
+            progreso.Sincronizado = false;
+            progreso.UltimaJugada = System.DateTime.Now;
+
+            _connection.Update(progreso);
+        }
+    }
+
+    public int LoadLevel(int usuarioId, string gameID)
+    {
+        var progreso = _connection.Table<ProgresoJuego>()
+                            .FirstOrDefault(p => p.UsuarioId == usuarioId && p.GameID == gameID);
+
+        return progreso != null ? progreso.NivelMaximo : 1;
+    }
+
+    // --- PARA EL PROFESOR (ESTADÍSTICAS) ---
+
+    public List<Usuario> ObtenerAlumnos()
+    {
+        return _connection.Table<Usuario>().Where(u => !u.EsProfesor).ToList();
+    }
+
+    public List<ProgresoJuego> ObtenerStatsAlumno(int alumnoId)
+    {
+        return _connection.Table<ProgresoJuego>().Where(p => p.UsuarioId == alumnoId).ToList();
+    }
+
+    // --- NUEVO: RANKING Y CLASE AUXILIAR ---
+
+    public List<AlumnoRanking> ObtenerRankingAlumnos()
+    {
+        List<AlumnoRanking> listaRanking = new List<AlumnoRanking>();
+
+        var alumnos = _connection.Table<Usuario>().Where(u => u.EsProfesor == false).ToList();
+
+        foreach (var alumno in alumnos)
+        {
+            var progresos = _connection.Table<ProgresoJuego>()
+                                .Where(p => p.UsuarioId == alumno.Id).ToList();
+
+            int totalPuntos = 0;
+            string detalles = "";
+
+            foreach (var juego in progresos)
+            {
+                totalPuntos += juego.PuntajeAcumulado;
+                string nombreJuego = juego.GameID.Replace("Juego", "");
+                detalles += $"{nombreJuego}: {juego.PuntajeAcumulado} pts | ";
+            }
+
+            listaRanking.Add(new AlumnoRanking
+            {
+                Id = alumno.Id,
+                Nombre = alumno.Nombre,
+                PuntajeTotal = totalPuntos,
+                DetalleJuegos = detalles
+            });
         }
 
-        // Si no existe, crear uno nuevo
-        var newUser = new UserProfile
-        {
-            Username = username,
-            CreatedAt = System.DateTime.Now
-        };
-        connection.Insert(newUser);
-        Debug.Log("Usuario registrado: " + username);
-
-        return newUser;
-    }
-
-    // --- FUNCIONES PARA PUNTAJES ---
-
-    public void SaveScore(int userId, string gameName, int score)
-    {
-        var newScore = new GameScore
-        {
-            UserId = userId,
-            MiniGameName = gameName,
-            Score = score,
-            DatePlayed = System.DateTime.Now
-        };
-
-        connection.Insert(newScore);
-        Debug.Log($"Puntaje guardado para {gameName}: {score}");
-    }
-
-    // --- FUNCIONES PARA PROGRESO DE NIVEL (NUEVAS) ---
-    // Estas son las funciones que tu GameManager estaba buscando y no encontraba
-
-    public void SaveProgress(int userId, int levelIndex)
-    {
-        // Guardamos el nivel como si fuera un puntaje especial llamado "LevelProgress"
-        // Esto evita tener que modificar la tabla de Usuarios y borrar la base de datos vieja
-        SaveScore(userId, "LevelProgress", levelIndex);
-        Debug.Log($"Progreso guardado: Nivel {levelIndex}");
-    }
-
-    public int LoadLevel(int userId)
-    {
-        // Buscamos el registro más alto de "LevelProgress"
-        var lastLevelRecord = connection.Table<GameScore>()
-                                        .Where(s => s.UserId == userId && s.MiniGameName == "LevelProgress")
-                                        .OrderByDescending(s => s.Score) // Ordenamos para obtener el nivel más alto
-                                        .FirstOrDefault();
-
-        if (lastLevelRecord != null)
-        {
-            return lastLevelRecord.Score; // Retorna el nivel guardado
-        }
-
-        return 1; // Si no ha jugado nunca, empieza en nivel 1
-    }
-
-    // --- FUNCIONES PARA ESTADÍSTICAS ---
-
-    // Obtener los mejores puntajes de un minijuego específico
-    public List<GameScoreView> GetHighScores(string gameName)
-    {
-        // Hacemos una consulta SQL (JOIN) para unir el nombre del usuario con su puntaje
-        string query = @"
-            SELECT u.Username, s.Score, s.DatePlayed 
-            FROM GameScore s 
-            INNER JOIN UserProfile u ON s.UserId = u.Id 
-            WHERE s.MiniGameName = ? 
-            ORDER BY s.Score DESC 
-            LIMIT 10";
-
-        return connection.Query<GameScoreView>(query, gameName);
+        return listaRanking.OrderByDescending(x => x.PuntajeTotal).ToList();
     }
 }
 
-// Clase auxiliar solo para mostrar datos en la tabla (no se guarda en DB)
-public class GameScoreView
+// Clase auxiliar para el reporte (fuera de la clase DatabaseManager, pero en el mismo archivo)
+public class AlumnoRanking
 {
-    public string Username { get; set; }
-    public int Score { get; set; }
-    public System.DateTime DatePlayed { get; set; }
+    public int Id;
+    public string Nombre;
+    public int PuntajeTotal;
+    public string DetalleJuegos;
 }
