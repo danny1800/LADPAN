@@ -7,19 +7,19 @@ public class GameManagerrr_suma : MonoBehaviour
 {
     [Header("Referencias UI Ecuaciones")]
     public Text[] row1Texts;
-    public DropSlot_SUMA row1Slot; // Correcto: Usa el script de Suma
+    public DropSlot_SUMA row1Slot;
 
     [Header("UI Puntuación")]
-    public Text scoreText; // Arrastra aquí el texto de Puntos
+    public Text scoreText;
 
     public Text[] row2Texts;
-    public DropSlot_SUMA row2Slot; // Correcto: Usa el script de Suma
+    public DropSlot_SUMA row2Slot;
 
     public Text[] row3Texts;
-    public DropSlot_SUMA row3Slot; // Correcto: Usa el script de Suma
+    public DropSlot_SUMA row3Slot;
 
     [Header("Referencias UI Respuestas")]
-    public DraggableItem_SUMA[] answerOptions; // Correcto: Usa el script de Suma
+    public DraggableItem_SUMA[] answerOptions;
     public Text[] answerTexts;
     public Transform answersParent;
 
@@ -52,31 +52,26 @@ public class GameManagerrr_suma : MonoBehaviour
     {
         correctCount = 0;
 
-        // Validación de seguridad
         if (row1Slot == null || row2Slot == null || row3Slot == null)
         {
             Debug.LogError("¡ALERTA! Faltan asignar los Slots_SUMA en el Inspector.");
             return;
         }
 
-        // Reiniciar slots
         row1Slot.isFilled = false;
         row2Slot.isFilled = false;
         row3Slot.isFilled = false;
 
-        // Limpiar textos viejos
         if (row1Slot.GetComponentInChildren<Text>()) row1Slot.GetComponentInChildren<Text>().text = "";
         if (row2Slot.GetComponentInChildren<Text>()) row2Slot.GetComponentInChildren<Text>().text = "";
         if (row3Slot.GetComponentInChildren<Text>()) row3Slot.GetComponentInChildren<Text>().text = "";
 
         List<int> correctAnswers = new List<int>();
 
-        // Crear Ecuaciones
         SetupEquation(row1Texts, row1Slot, correctAnswers);
         SetupEquation(row2Texts, row2Slot, correctAnswers);
         SetupEquation(row3Texts, row3Slot, correctAnswers);
 
-        // Crear Respuestas (3 correctas + falsas)
         List<int> finalOptions = new List<int>(correctAnswers);
 
         while (finalOptions.Count < answerOptions.Length)
@@ -88,7 +83,6 @@ public class GameManagerrr_suma : MonoBehaviour
 
         Shuffle(finalOptions);
 
-        // Asignar valores a las fichas
         for (int i = 0; i < answerOptions.Length; i++)
         {
             if (answerOptions[i] != null)
@@ -113,7 +107,7 @@ public class GameManagerrr_suma : MonoBehaviour
         int numA = Random.Range(1, rangeMax);
         int numB = Random.Range(1, rangeMax);
 
-        int result = numA + numB; // LÓGICA DE SUMA
+        int result = numA + numB;
 
         if (texts.Length > 1)
         {
@@ -125,32 +119,28 @@ public class GameManagerrr_suma : MonoBehaviour
         answers.Add(result);
     }
 
-    // Esta función la llaman tus slots _SUMA
     public void CheckAnswer(bool isCorrect)
     {
         if (isCorrect)
         {
             correctCount++;
 
-            // Ganas si aciertas las 3
             if (correctCount >= 3)
             {
                 Debug.Log("Nivel completado");
 
-                if (correctSound != null)
-                    correctSound.Play();
+                if (correctSound != null) correctSound.Play();
+                if (playerAnim != null) playerAnim.PlayCorrectAnimations();
 
-                if (playerAnim != null)
-                    playerAnim.PlayCorrectAnimations();
-
-                // Sumar puntos
                 currentScore += pointsPerLevel;
                 UpdateScoreUI();
 
-                // (Opcional) Guardar progreso de NIVEL
-                if (DatabaseManager.Instance != null && GameSession.Current != null && GameSession.Current.CurrentUser != null)
+                // --- CORREGIDO AQUÍ ---
+                // Eliminado .CurrentUser extra. Asumimos que GameSession.Current ES el usuario.
+                if (DatabaseManager.Instance != null && GameSession.Current != null)
                 {
-                    DatabaseManager.Instance.SaveProgress(GameSession.Current.CurrentUser.Id, currentLevel);
+                    // Si GameSession.Current tiene el Id directamente:
+                    DatabaseManager.Instance.SaveProgress(GameSession.Current.Id, currentLevel);
                 }
 
                 currentLevel++;
@@ -159,12 +149,9 @@ public class GameManagerrr_suma : MonoBehaviour
         }
         else
         {
-            if (wrongSound != null)
-                wrongSound.Play();
+            if (wrongSound != null) wrongSound.Play();
+            if (playerAnim != null) playerAnim.PlayWrongAnimations();
 
-            if (playerAnim != null)
-                playerAnim.PlayWrongAnimations();
-            // AL PERDER: Guardamos PUNTAJE
             SaveMyScore();
             StartCoroutine(GameOverSequence());
         }
@@ -173,23 +160,25 @@ public class GameManagerrr_suma : MonoBehaviour
     IEnumerator RestartAfterFail()
     {
         yield return new WaitForSeconds(3f);
-
-        // Reiniciar puntos y nivel
         currentScore = 0;
         UpdateScoreUI();
-
         currentLevel = 1;
         GenerateLevel();
     }
 
-    // --- NUEVO: Guardar en DB ---
     void SaveMyScore()
     {
-        if (DatabaseManager.Instance != null && GameSession.Current != null && GameSession.Current.CurrentUser != null)
+        // --- CORREGIDO AQUÍ ---
+        // Eliminado .CurrentUser extra.
+        if (DatabaseManager.Instance != null && GameSession.Current != null)
         {
-            int myUserId = GameSession.Current.CurrentUser.Id;
-            // Guardamos con el ID "JuegoSumas"
+            int myUserId = GameSession.Current.Id; // CORREGIDO: Acceso directo al ID
+
+            // NOTA IMPORTANTE: Si esta línea sigue dando error, debes abrir el script "DatabaseManager"
+            // y buscar la función public void SaveScore(...).
+            // Asegúrate de que acepte 3 cosas: (int id, string juego, int puntos).
             DatabaseManager.Instance.SaveScore(myUserId, gameID, currentScore);
+
             Debug.Log($"Puntaje de Sumas guardado: {currentScore}");
         }
     }
@@ -216,7 +205,6 @@ public class GameManagerrr_suma : MonoBehaviour
 
         if (gameOverText) gameOverText.SetActive(false);
 
-        // Reiniciar puntos y nivel
         currentScore = 0;
         UpdateScoreUI();
 

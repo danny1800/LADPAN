@@ -1,11 +1,17 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-// GameSession.cs
 public static class GameSession
 {
-    // Aquí guardamos quién inició sesión (Alumno o Profe)
-    // Es estático para acceder desde cualquier lado sin arrastrar scripts
+    // Esta es la variable principal
     public static Usuario CurrentUser;
+
+    // ESTO ES EL TRUCO:
+    // Creamos una propiedad "Current" que apunta a "CurrentUser".
+    // Así, si un script pide Current, se le da CurrentUser.
+    // Si otro pide CurrentUser, también funciona.
+    public static Usuario Current
+    {
+        get { return CurrentUser; }
+        set { CurrentUser = value; }
+    }
 }
